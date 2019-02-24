@@ -1,13 +1,18 @@
-<idea-plugin url="https://github.com/Vektah/CodeGlance">
+<idea-plugin url="https://github.com/mgziminsky/CodeGlance">
 	<id>net.vektah.codeglance</id>
 	<name>CodeGlance</name>
-	<version>1.5.4</version>
-	<vendor email="adam@vektah.net" url="https://github.com/Vektah/CodeGlance">Vektah</vendor>
+	<vendor email="mgziminsky@users.noreply.github.com" url="https://github.com/mgziminsky/CodeGlance">mgziminsky</vendor>
 
-	<description>
+	<description><![CDATA[
+		This is a fork of the CodeGlance plugin containing several bug fixes and improvements. Its goal is to have functionality
+		at least on-par with the built in minimaps of Sumblime 3 and VSCode.
+
+		<hr/>
+
+		Original Description:
 		Embeds a code minimap similar to the one found in Sublime into the editor pane. Works with both light and dark
 		themes using your customized colors for syntax highlighting.
-	</description>
+	]]></description>
 
 	<change-notes><![CDATA[
 		<h3>1.5.4</h3>
@@ -128,12 +133,12 @@
 		</ul>
 	]]></change-notes>
 
-	<idea-version since-build="107.105"/>
+	<idea-version since-build="139" until-build="143.*"/>
 
 	<depends>com.intellij.modules.lang</depends>
 
 	<project-components>
-		<component><implementation-class>net.vektah.codeglance.CodeGlancePlugin</implementation-class></component>
+		<component><implementation-class>net.vektah.codeglance.CodeGlancePlugin</implementation-class><loadForDefaultProject/></component>
 	</project-components>
 
 	<actions>
@@ -144,6 +149,6 @@
 
 	<extensions defaultExtensionNs="com.intellij">
 		<applicationService serviceImplementation="net.vektah.codeglance.config.ConfigService" />
-		<applicationConfigurable implementation="net.vektah.codeglance.config.ConfigEntry" />
+		<applicationConfigurable instance="net.vektah.codeglance.config.ConfigEntry" />
 	</extensions>
 </idea-plugin>
