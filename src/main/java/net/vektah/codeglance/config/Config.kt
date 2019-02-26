@@ -26,15 +26,13 @@
 package net.vektah.codeglance.config
 
 class Config {
-    var pixelsPerLine: Int = 3
+    var pixelsPerLine: Int = 4
     var minLineCount: Int = 1
-    var maxFileSize: Int = 1024000
     var disabled: Boolean = false
     var jumpOnMouseDown: Boolean = true
-    var percentageBasedClick: Boolean = false
     var width: Int = 110
     var viewportColor: String = "A0A0A0"
-    var clean: Boolean = true
+    var clean: Boolean = false
     var isRightAligned: Boolean = true
     var minWindowWidth: Int = 0
     var locked: Boolean = false

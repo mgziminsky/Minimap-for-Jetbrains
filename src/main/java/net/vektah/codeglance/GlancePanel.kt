@@ -87,7 +87,7 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor) : JPanel
     private val updateTask: ReadTask
 
     private val isDisabled: Boolean
-        get() = config.disabled || editor.document.textLength > config.maxFileSize || editor.document.lineCount < config.minLineCount || parent == null || parent.width < config.minWindowWidth
+        get() = config.disabled || editor.document.textLength > PersistentFSConstants.getMaxIntellisenseFileSize() || editor.document.lineCount < config.minLineCount || parent == null || parent.width < config.minWindowWidth
 
     init {
         Disposer.register(fileEditor, this)
