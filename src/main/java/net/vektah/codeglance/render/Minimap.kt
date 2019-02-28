@@ -36,7 +36,6 @@ import net.vektah.codeglance.config.Config
 import java.awt.AlphaComposite
 import java.awt.Graphics2D
 import java.awt.image.BufferedImage
-import kotlin.math.roundToInt
 
 /**
  * A rendered minimap of a document

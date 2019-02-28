@@ -16,7 +16,7 @@ import java.awt.*
 /**
  * Injects a panel into any newly created editors.
  */
-class EditorPanelInjector(private val project: Project) : FileEditorManagerListener {
+class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapter() {
     private val logger = Logger.getInstance(javaClass)
     private var config: Config = ServiceManager.getService(ConfigService::class.java).state!!
 
@@ -80,15 +80,10 @@ class EditorPanelInjector(private val project: Project) : FileEditorManagerListe
             BorderLayout.LINE_START
 
         if (innerLayout.getLayoutComponent(where) == null) {
-            val glancePanel = GlancePanel(project, editor, panel)
+            val glancePanel = GlancePanel(project, editor)
             panel.add(glancePanel, where)
+            // Is this really necessary???
             Disposer.register(editor, Disposable { panel.remove(glancePanel) })
         }
-    }
-
-    override fun fileClosed(fem: FileEditorManager, virtualFile: VirtualFile) {
-    }
-
-    override fun selectionChanged(fileEditorManagerEvent: FileEditorManagerEvent) {
     }
 }
