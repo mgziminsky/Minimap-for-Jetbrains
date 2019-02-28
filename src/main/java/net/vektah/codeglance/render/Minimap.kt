@@ -26,7 +26,6 @@
 package net.vektah.codeglance.render
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.EditorColorsScheme
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.fileTypes.SyntaxHighlighter
@@ -47,37 +46,21 @@ class Minimap(private val config: Config) {
     private val logger = Logger.getInstance(javaClass)
 
     /**
-     * Scans over the entire document once to work out the required dimensions then rebuilds the image if necessary.
-
-     * Because java chars are UTF-8 16 bit chars this function should be UTF safe in the 2 byte range, which is all intellij
-     * seems to handle anyway....
-     */
-    private fun updateDimensions(editor: Editor): Int {
-        val scale = config.pixelsPerLine.toDouble() / editor.lineHeight
-        val height = (editor.contentComponent.height * scale).roundToInt()
-
-        // If the image is too small to represent the entire document now then regenerate it
-        // TODO: Copy old image when incremental update is added.
-        if (img == null || img!!.height < height || img!!.width < config.width) {
-            if (img != null) img!!.flush()
-            // Create an image that is a bit bigger then the one we need so we don't need to re-create it again soon.
-            // Documents can get big, so rather then relative sizes lets just add a fixed amount on.
-            img = UIUtil.createImage(config.width, height + (100 * config.pixelsPerLine), BufferedImage.TYPE_4BYTE_ABGR)
-            logger.debug("Created new image")
-        }
-
-        return height
-    }
-
-    /**
      * Internal worker function to update the minimap image
      *
      * @param editor        The editor being drawn
      * @param hl            The syntax highlighter to use for the language this document is in.
      */
-    fun update(editor: EditorImpl, hl: SyntaxHighlighter, indicator: ProgressIndicator?): Int {
+    fun update(editor: EditorImpl, scrollstate: ScrollState, hl: SyntaxHighlighter, indicator: ProgressIndicator?) {
         logger.debug("Updating file image.")
-        val height = updateDimensions(editor)
+
+        if (img == null || img!!.height < scrollstate.documentHeight || img!!.width < config.width) {
+            if (img != null) img!!.flush()
+            // Create an image that is a bit bigger then the one we need so we don't need to re-create it again soon.
+            // Documents can get big, so rather then relative sizes lets just add a fixed amount on.
+            img = UIUtil.createImage(config.width, scrollstate.documentHeight + (100 * config.pixelsPerLine), BufferedImage.TYPE_4BYTE_ABGR)
+            logger.debug("Created new image")
+        }
 
         val text = editor.document.text
         val colorScheme = editor.colorsScheme
@@ -97,8 +80,11 @@ class Minimap(private val config: Config) {
         var x: Int
         var y: Int
         val line = editor.document.createLineIterator()
+
+        // These are just to reduce allocations. Premature optimization???
         val colorBuffer = FloatArray(4)
         val scaleBuffer = FloatArray(4)
+
         while (tokenType != null) {
             indicator?.checkCanceled()
 
@@ -137,7 +123,7 @@ class Minimap(private val config: Config) {
 
                 // Watch out for tokens that extend past the document... bad plugins? see issue #138
                 if (i >= text.length)
-                    return height
+                    return
 
                 ch = text[i]
 
@@ -167,8 +153,6 @@ class Minimap(private val config: Config) {
             while (lexer.tokenType != null && lexer.tokenStart < i)
             tokenType = lexer.tokenType
         }
-
-        return height
     }
 
     private fun renderClean(x: Int, y: Int, char: Int, color: FloatArray, buffer: FloatArray) {

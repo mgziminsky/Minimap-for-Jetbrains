@@ -25,7 +25,15 @@
 
 package net.vektah.codeglance.render
 
+import com.intellij.openapi.editor.Editor
+import net.vektah.codeglance.config.Config
+import java.awt.Rectangle
+import kotlin.math.roundToInt
+
 class ScrollState {
+    var scale: Float = 0f
+        private set
+
     var documentWidth: Int = 0
         private set
     var documentHeight: Int = 0
@@ -45,36 +53,20 @@ class ScrollState {
     var viewportHeight: Int = 0
         private set
 
-    fun setDocumentSize(width: Int, height: Int): ScrollState {
-        documentWidth = width
-        documentHeight = height
-        recomputeVisible()
-
-        return this
+    fun computeDimensions(editor: Editor, config: Config) {
+        scale = config.pixelsPerLine.toFloat() / editor.lineHeight
+        documentHeight = (editor.contentComponent.height * scale).roundToInt()
+        documentWidth = config.width
     }
 
-    fun setVisibleHeight(height: Int): ScrollState {
-        visibleHeight = height
-        recomputeVisible()
-
-        return this
-    }
-
-    fun setViewportArea(start: Int, height: Int): ScrollState {
-        viewportStart = start
-        viewportHeight = height
-        recomputeVisible()
-
-        return this
-    }
-
-    private fun recomputeVisible() {
-        visibleStart = ((viewportStart / (documentHeight - viewportHeight + 1).toFloat()) * (documentHeight - visibleHeight+ 1)).toInt()
-        if (visibleStart < 0) {
-            visibleStart = 0
-        }
-
+    fun recomputeVisible(visibleArea: Rectangle) {
+        visibleHeight = visibleArea.height
         drawHeight = Math.min(visibleHeight, documentHeight)
+
+        viewportStart = (visibleArea.y * scale).toInt()
+        viewportHeight = (visibleArea.height * scale).toInt()
+
+        visibleStart = ((viewportStart.toFloat() / (documentHeight - viewportHeight + 1)) * (documentHeight - visibleHeight + 1)).toInt().coerceAtLeast(0)
         visibleEnd = visibleStart + drawHeight
     }
 }

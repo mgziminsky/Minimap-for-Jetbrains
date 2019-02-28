@@ -26,6 +26,7 @@
 package net.vektah.codeglance
 
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.FoldRegion
 import com.intellij.openapi.editor.colors.ColorKey
@@ -104,10 +105,8 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor, private 
 
         componentListener = object : ComponentAdapter() {
             override fun componentResized(componentEvent: ComponentEvent?) {
+                updateImage()
                 updateSize()
-                scrollstate.setVisibleHeight(height)
-                this@GlancePanel.revalidate()
-                this@GlancePanel.repaint()
             }
         }
         container.addComponentListener(componentListener)
@@ -146,19 +145,20 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor, private 
         editor.selectionModel.addSelectionListener(selectionListener)
 
         updateTask = object : ReadTask {
-            override fun onCanceled(indicator: ProgressIndicator) {
-                updateImage()
-            }
+            override fun onCanceled(indicator: ProgressIndicator) = updateImage()
 
             override fun computeInReadAction(indicator: ProgressIndicator) {
                 val file = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
                 val map = getOrCreateMap() ?: return
 
                 try {
+                    scrollstate.computeDimensions(editor, config)
                     val hl = SyntaxHighlighterFactory.getSyntaxHighlighter(file.language, project, file.virtualFile)
-                    val mapHeight = map.update(editor, hl, indicator)
-                    scrollstate.setDocumentSize(config.width, mapHeight)
-                    repaint()
+                    map.update(editor, scrollstate, hl, indicator)
+                    ApplicationManager.getApplication().invokeLater {
+                        scrollstate.recomputeVisible(editor.scrollingModel.visibleArea)
+                        repaint()
+                    }
                 }
                 finally {
                     renderLock.release()
@@ -214,7 +214,7 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor, private 
         ProgressIndicatorUtils.scheduleWithWriteActionPriority(updateTask)
     }
 
-    private fun updateImageSoon() = SwingUtilities.invokeLater { updateImage() }
+    private fun updateImageSoon() = ApplicationManager.getApplication().invokeLater(this::updateImage)
 
     private fun paintLast(gfx: Graphics?) {
         val g = gfx as Graphics2D
