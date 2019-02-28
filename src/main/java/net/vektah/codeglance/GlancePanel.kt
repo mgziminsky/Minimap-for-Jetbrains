@@ -93,19 +93,15 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor) : JPanel
 
     init {
         Disposer.register(fileEditor, this)
+        Disposer.register(this, scrollbar)
 
         this.addHierarchyListener {
             if (it.changeFlags.and(HierarchyEvent.PARENT_CHANGED.toLong()) != 0L) {
-                updateImage()
-                updateSize()
+                refresh()
             }
         }
 
-        configService.onChange {
-            // FIXME: No longer receiving change events???
-            updateImage()
-            updateSize()
-        }
+        configService.addOnChange(this::refresh)
 
         componentListener = object : ComponentAdapter() {
             override fun componentResized(componentEvent: ComponentEvent?) = updateImage()
@@ -158,12 +154,17 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor) : JPanel
             }
         }
 
-        updateSize()
-        updateImage()
-
         isOpaque = false
         layout = BorderLayout()
         add(scrollbar)
+
+        refresh()
+    }
+
+    private fun refresh() {
+        updateImage()
+        updateSize()
+        parent?.revalidate()
     }
 
     /**
@@ -294,6 +295,7 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor) : JPanel
     }
 
     override fun dispose() {
+        configService.removeOnChange(this::refresh)
         editor.contentComponent.removeComponentListener(componentListener)
         editor.document.removeDocumentListener(documentListener)
         editor.scrollingModel.removeVisibleAreaListener(areaListener)

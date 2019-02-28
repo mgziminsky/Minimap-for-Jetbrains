@@ -1,8 +1,8 @@
 package net.vektah.codeglance
 
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.impl.EditorImpl
-import net.vektah.codeglance.config.Config
 import net.vektah.codeglance.config.ConfigService
 import net.vektah.codeglance.render.ScrollState
 import java.awt.AlphaComposite
@@ -16,7 +16,7 @@ import java.awt.event.MouseWheelEvent
 import javax.swing.JPanel
 import kotlin.math.roundToInt
 
-class Scrollbar(private val editor: EditorImpl, private val scrollstate : ScrollState) : JPanel() {
+class Scrollbar(private val editor: EditorImpl, private val scrollstate : ScrollState) : JPanel(), Disposable {
     private val defaultCursor = Cursor(Cursor.DEFAULT_CURSOR)
 
     private var visibleRectAlpha = DEFAULT_ALPHA
@@ -28,15 +28,15 @@ class Scrollbar(private val editor: EditorImpl, private val scrollstate : Scroll
         }
 
     private val configService = ServiceManager.getService(ConfigService::class.java)
-    private lateinit var config: Config
-    private lateinit var visibleRectColor: Color
+    private val config = configService.state!!
 
+    private lateinit var visibleRectColor: Color
     private val vOffset: Int
         get() = scrollstate.viewportStart - scrollstate.visibleStart
 
     init {
         initConfig()
-        configService.onChange(this::initConfig)
+        configService.addOnChange(this::initConfig)
         val mouseHandler = MouseHandler()
         addMouseListener(mouseHandler)
         addMouseWheelListener(mouseHandler)
@@ -44,7 +44,6 @@ class Scrollbar(private val editor: EditorImpl, private val scrollstate : Scroll
     }
 
     private fun initConfig() {
-        config = configService.state!!
         visibleRectColor = Color.decode("#" + config.viewportColor)
     }
 
@@ -80,6 +79,10 @@ class Scrollbar(private val editor: EditorImpl, private val scrollstate : Scroll
         g.color = visibleRectColor
         g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, visibleRectAlpha)
         g.fillRect(0, vOffset, width, scrollstate.viewportHeight)
+    }
+
+    override fun dispose() {
+        configService.removeOnChange(this::initConfig)
     }
 
     inner class MouseHandler : MouseAdapter() {
