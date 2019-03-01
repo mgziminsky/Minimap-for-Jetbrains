@@ -40,13 +40,11 @@ import com.intellij.openapi.editor.ex.FoldingModelEx
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.TextEditor
-import com.intellij.openapi.fileTypes.SyntaxHighlighterFactory
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.util.ProgressIndicatorUtils
 import com.intellij.openapi.progress.util.ReadTask
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.psi.PsiDocumentManager
 import com.intellij.ui.JBColor
 import com.intellij.util.ui.UIUtil
 import net.vektah.codeglance.concurrent.DirtyLock
@@ -132,13 +130,11 @@ class GlancePanel(private val project: Project, fileEditor: FileEditor) : JPanel
             override fun onCanceled(indicator: ProgressIndicator) = updateImage()
 
             override fun computeInReadAction(indicator: ProgressIndicator) {
-                val file = PsiDocumentManager.getInstance(project).getPsiFile(editor.document) ?: return
                 val map = getOrCreateMap() ?: return
 
                 try {
                     scrollstate.computeDimensions(editor, config)
-                    val hl = SyntaxHighlighterFactory.getSyntaxHighlighter(file.language, project, file.virtualFile)
-                    map.update(editor, scrollstate, hl, indicator)
+                    map.update(editor, scrollstate, indicator)
                     ApplicationManager.getApplication().invokeLater {
                         scrollstate.recomputeVisible(editor.scrollingModel.visibleArea)
                         repaint()

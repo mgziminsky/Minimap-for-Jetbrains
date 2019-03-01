@@ -26,15 +26,11 @@
 package net.vektah.codeglance.render
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.colors.EditorColorsScheme
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.fileTypes.SyntaxHighlighter
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.psi.tree.IElementType
 import com.intellij.util.ui.UIUtil
 import net.vektah.codeglance.config.Config
 import java.awt.AlphaComposite
-import java.awt.Graphics2D
 import java.awt.image.BufferedImage
 
 /**
@@ -50,7 +46,7 @@ class Minimap(private val config: Config) {
      * @param editor        The editor being drawn
      * @param hl            The syntax highlighter to use for the language this document is in.
      */
-    fun update(editor: EditorImpl, scrollstate: ScrollState, hl: SyntaxHighlighter, indicator: ProgressIndicator?) {
+    fun update(editor: EditorImpl, scrollstate: ScrollState, indicator: ProgressIndicator?) {
         logger.debug("Updating file image.")
 
         if (img == null || img!!.height < scrollstate.documentHeight || img!!.width < config.width) {
@@ -61,59 +57,56 @@ class Minimap(private val config: Config) {
             logger.debug("Created new image")
         }
 
-        val text = editor.document.text
-        val colorScheme = editor.colorsScheme
-        val folds = editor.foldingModel
-
-        var ch: Char
-        val lexer = hl.highlightingLexer
-        var tokenType: IElementType?
-
-        val g = img!!.graphics as Graphics2D
+        val g = img!!.createGraphics()
         g.composite = AlphaComposite.getInstance(AlphaComposite.CLEAR)
         g.fillRect(0, 0, img!!.width, img!!.height)
-
-        lexer.start(text)
-        tokenType = lexer.tokenType
-
-        var x: Int
-        var y: Int
-        val line = editor.document.createLineIterator()
 
         // These are just to reduce allocations. Premature optimization???
         val colorBuffer = FloatArray(4)
         val scaleBuffer = FloatArray(4)
 
-        while (tokenType != null) {
+        val text = editor.document.text
+        val line = editor.document.createLineIterator()
+        val folds = editor.foldingModel
+        val hlIter = editor.highlighter.createIterator(0)
+
+        var x = 0
+        var y: Int
+        var prevY = -1
+        while (!hlIter.atEnd()) {
             indicator?.checkCanceled()
 
-            val tokenStart = lexer.tokenStart
-            y = editor.offsetToVisualLine(tokenStart) * config.pixelsPerLine
+            val tokenStart = hlIter.start
+            var i = tokenStart
             line.start(tokenStart)
+            y = (line.lineNumber - folds.getFoldedLinesCountBefore(tokenStart)) * config.pixelsPerLine
 
-            // Pre-loop to count whitespace from start of line.
-            x = 0
-            var i = line.start
-            while (i < tokenStart) {
-                // Jump over folds
-                if (folds.isOffsetCollapsed(i)) {
-                    i = folds.getCollapsedRegionAtOffset(i)!!.endOffset
-                    continue
+            // New line, pre-loop to count whitespace from start of line.
+            if (y != prevY) {
+                x = 0
+                i = line.start
+                while (i < tokenStart) {
+                    // Jump over folds
+                    if (folds.isOffsetCollapsed(i)) {
+                        i = folds.getCollapsedRegionAtOffset(i)!!.endOffset
+                        continue
+                    }
+
+                    x += if (text[i++] == '\t') {
+                        4
+                    } else {
+                        1
+                    }
+
+                    // Abort if this line is getting too long...
+                    if (x > config.width)
+                        break
                 }
-
-                x += if (text[i++] == '\t') {
-                    4
-                } else {
-                    1
-                }
-
-                // Abort if this line is getting to long...
-                if (x > config.width)
-                    break
             }
 
             // Render whole token, make sure multi lines are handled gracefully.
-            while (i < lexer.tokenEnd) {
+            hlIter.textAttributes.foregroundColor.getRGBComponents(colorBuffer)
+            while (i < hlIter.end) {
                 // Jump over folds
                 if (folds.isOffsetCollapsed(i)) {
                     i = folds.getCollapsedRegionAtOffset(i)!!.endOffset
@@ -124,9 +117,7 @@ class Minimap(private val config: Config) {
                 if (i >= text.length)
                     return
 
-                ch = text[i]
-
-                when (ch) {
+                when (text[i]) {
                     '\n' -> {
                         x = 0
                         y += config.pixelsPerLine
@@ -136,7 +127,6 @@ class Minimap(private val config: Config) {
                 }
 
                 if (0 <= x && x < img!!.width && 0 <= y && y + config.pixelsPerLine < img!!.height) {
-                    getColorForElementType(tokenType, hl, colorScheme, colorBuffer) // Load rgba into colorBuffer
                     if (config.clean) {
                         renderClean(x, y, text[i].toInt(), colorBuffer, scaleBuffer)
                     } else {
@@ -147,10 +137,10 @@ class Minimap(private val config: Config) {
                 ++i
             }
 
+            prevY = y
             do // Skip to end of fold
-                lexer.advance()
-            while (lexer.tokenType != null && lexer.tokenStart < i)
-            tokenType = lexer.tokenType
+                hlIter.advance()
+            while (!hlIter.atEnd() && hlIter.start < i)
         }
     }
 
@@ -214,22 +204,6 @@ class Minimap(private val config: Config) {
                 setPixel(x, y + 2, color, ((topWeight + bottomWeight) / 2.0).toFloat(), buffer)
                 setPixel(x, y + 3, color, bottomWeight, buffer)
             }
-        }
-    }
-
-    /**
-     * Looks up the color a token should be rendered with.
-     *
-     * @param element       The element to get the color for
-     * @param hl            the syntax highlighter for this document
-     * @param colorScheme   the users color scheme
-     */
-    private fun getColorForElementType(element: IElementType, hl: SyntaxHighlighter, colorScheme: EditorColorsScheme, result: FloatArray) {
-        colorScheme.defaultForeground.getRGBComponents(result)
-        for (attribute in hl.getTokenHighlights(element)) {
-            colorScheme.getAttributes(attribute)?.
-                foregroundColor?.
-                getRGBComponents(result)
         }
     }
 
