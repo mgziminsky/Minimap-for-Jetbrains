@@ -26,7 +26,7 @@
 package net.vektah.codeglance.render
 
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.util.ui.UIUtil
 import net.vektah.codeglance.config.Config
@@ -46,7 +46,7 @@ class Minimap(private val config: Config) {
      * @param editor        The editor being drawn
      * @param hl            The syntax highlighter to use for the language this document is in.
      */
-    fun update(editor: EditorImpl, scrollstate: ScrollState, indicator: ProgressIndicator?) {
+    fun update(editor: EditorEx, scrollstate: ScrollState, indicator: ProgressIndicator?) {
         logger.debug("Updating file image.")
 
         if (img == null || img!!.height < scrollstate.documentHeight || img!!.width < config.width) {
@@ -67,30 +67,40 @@ class Minimap(private val config: Config) {
 
         val text = editor.document.text
         val line = editor.document.createLineIterator()
-        val folds = editor.foldingModel
         val hlIter = editor.highlighter.createIterator(0)
+        val defaultForeground = editor.colorsScheme.defaultForeground
 
         var x = 0
         var y: Int
         var prevY = -1
+        var foldedLines = 0
+
         while (!hlIter.atEnd()) {
             indicator?.checkCanceled()
 
             val tokenStart = hlIter.start
             var i = tokenStart
             line.start(tokenStart)
-            y = (line.lineNumber - folds.getFoldedLinesCountBefore(tokenStart)) * config.pixelsPerLine
+            y = (line.lineNumber - foldedLines) * config.pixelsPerLine
+
+            // Jump over folds
+            val checkFold = {
+                val isFolded = editor.foldingModel.isOffsetCollapsed(i)
+                if (isFolded) {
+                    val fold = editor.foldingModel.getCollapsedRegionAtOffset(i)!!
+                    foldedLines += editor.document.getLineNumber(fold.endOffset) - editor.document.getLineNumber(fold.startOffset)
+                    i = fold.endOffset
+                }
+                isFolded
+            }
 
             // New line, pre-loop to count whitespace from start of line.
             if (y != prevY) {
                 x = 0
                 i = line.start
                 while (i < tokenStart) {
-                    // Jump over folds
-                    if (folds.isOffsetCollapsed(i)) {
-                        i = folds.getCollapsedRegionAtOffset(i)!!.endOffset
+                    if (checkFold())
                         continue
-                    }
 
                     x += if (text[i++] == '\t') {
                         4
@@ -105,13 +115,10 @@ class Minimap(private val config: Config) {
             }
 
             // Render whole token, make sure multi lines are handled gracefully.
-            hlIter.textAttributes.foregroundColor.getRGBComponents(colorBuffer)
+            (hlIter.textAttributes.foregroundColor ?: defaultForeground).getRGBComponents(colorBuffer)
             while (i < hlIter.end) {
-                // Jump over folds
-                if (folds.isOffsetCollapsed(i)) {
-                    i = folds.getCollapsedRegionAtOffset(i)!!.endOffset
+                if (checkFold())
                     continue
-                }
 
                 // Watch out for tokens that extend past the document... bad plugins? see issue #138
                 if (i >= text.length)

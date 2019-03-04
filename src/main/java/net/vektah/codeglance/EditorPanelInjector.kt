@@ -3,15 +3,18 @@ package net.vektah.codeglance
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
-import com.intellij.openapi.fileEditor.*
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.FileEditorManagerAdapter
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.ui.JBSplitter
 import net.vektah.codeglance.config.Config
 import net.vektah.codeglance.config.ConfigService
-import javax.swing.*
-import java.awt.*
+import java.awt.BorderLayout
+import javax.swing.JLayeredPane
+import javax.swing.JPanel
 
 /**
  * Injects a panel into any newly created editors.
@@ -24,8 +27,8 @@ class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapt
         // Seems there is a case where multiple split panes can have the same file open and getSelectedEditor, and even
         // getEditors(virtualFile) return only one of them... So shotgun approach here.
         val editors = fem.allEditors
-        for (editor in editors) {
-            inject(editor)
+        for (editor in editors.filter { it is TextEditor }) {
+            inject(editor as TextEditor)
         }
     }
 
@@ -40,12 +43,7 @@ class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapt
      *
      * @param editor A text editor to inject into.
      */
-    private fun getPanel(editor: FileEditor): JPanel? {
-        if (editor !is TextEditor) {
-            logger.debug("I01: Injection failed, only text editors are supported currently.")
-            return null
-        }
-
+    private fun getPanel(editor: TextEditor): JPanel? {
         try {
             val outerPanel = editor.component as JPanel
             val outerLayout = outerPanel.layout as BorderLayout
@@ -70,7 +68,7 @@ class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapt
         }
     }
 
-    private fun inject(editor: FileEditor) {
+    private fun inject(editor: TextEditor) {
         val panel = getPanel(editor) ?: return
         val innerLayout = panel.layout as BorderLayout
 

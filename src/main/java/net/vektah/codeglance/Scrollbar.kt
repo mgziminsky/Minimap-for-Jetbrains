@@ -2,7 +2,7 @@ package net.vektah.codeglance
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.editor.Editor
 import net.vektah.codeglance.config.ConfigService
 import net.vektah.codeglance.render.ScrollState
 import java.awt.AlphaComposite
@@ -16,7 +16,7 @@ import java.awt.event.MouseWheelEvent
 import javax.swing.JPanel
 import kotlin.math.roundToInt
 
-class Scrollbar(private val editor: EditorImpl, private val scrollstate : ScrollState) : JPanel(), Disposable {
+class Scrollbar(private val editor: Editor, private val scrollstate : ScrollState) : JPanel(), Disposable {
     private val defaultCursor = Cursor(Cursor.DEFAULT_CURSOR)
 
     private var visibleRectAlpha = DEFAULT_ALPHA
@@ -63,7 +63,7 @@ class Scrollbar(private val editor: EditorImpl, private val scrollstate : Scroll
         val scrollingModel = editor.scrollingModel
         val line = (y + scrollstate.visibleStart) / config.pixelsPerLine
         val offset = scrollstate.viewportHeight / config.pixelsPerLine / 2
-        scrollingModel.scrollVertically(editor.visibleLineToY(Math.max(0, line - offset)))
+        scrollingModel.scrollVertically(Math.max(0, line - offset) * editor.lineHeight)
     }
 
     private fun updateAlpha(y: Int) {
