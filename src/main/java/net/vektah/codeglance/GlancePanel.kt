@@ -30,9 +30,9 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.FoldRegion
 import com.intellij.openapi.editor.colors.ColorKey
-import com.intellij.openapi.editor.event.DocumentAdapter
 import com.intellij.openapi.editor.event.DocumentEvent
 import com.intellij.openapi.editor.event.DocumentListener
+import com.intellij.openapi.editor.event.SelectionEvent
 import com.intellij.openapi.editor.event.SelectionListener
 import com.intellij.openapi.editor.event.VisibleAreaListener
 import com.intellij.openapi.editor.ex.EditorEx
@@ -45,7 +45,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.PersistentFSConstants
 import com.intellij.ui.JBColor
-import com.intellij.util.ui.UIUtil
 import net.vektah.codeglance.concurrent.DirtyLock
 import net.vektah.codeglance.config.Config
 import net.vektah.codeglance.config.ConfigService
@@ -81,7 +80,7 @@ class GlancePanel(private val project: Project, textEditor: TextEditor) : JPanel
     private val componentListener: ComponentListener
     private val documentListener: DocumentListener
     private val areaListener: VisibleAreaListener
-    private val selectionListener: SelectionListener = SelectionListener { repaint() }
+    private val selectionListener: SelectionListener
 
     private val updateTask: ReadTask
 
@@ -105,8 +104,10 @@ class GlancePanel(private val project: Project, textEditor: TextEditor) : JPanel
         }
         editor.contentComponent.addComponentListener(componentListener)
 
-        documentListener = object : DocumentAdapter() {
-            override fun documentChanged(documentEvent: DocumentEvent?) = updateImage()
+        documentListener = object : DocumentListener {
+            override fun beforeDocumentChange(event: DocumentEvent) {}
+
+            override fun documentChanged(event: DocumentEvent) = updateImage()
         }
         editor.document.addDocumentListener(documentListener)
 
@@ -123,9 +124,12 @@ class GlancePanel(private val project: Project, textEditor: TextEditor) : JPanel
         }
         editor.scrollingModel.addVisibleAreaListener(areaListener)
 
+        selectionListener = object : SelectionListener {
+            override fun selectionChanged(e: SelectionEvent) = repaint()
+        }
         editor.selectionModel.addSelectionListener(selectionListener)
 
-        updateTask = object : ReadTask {
+        updateTask = object : ReadTask() {
             override fun onCanceled(indicator: ProgressIndicator) = updateImage()
 
             override fun computeInReadAction(indicator: ProgressIndicator) {
@@ -266,7 +270,8 @@ class GlancePanel(private val project: Project, textEditor: TextEditor) : JPanel
         }
 
         if (buf == null || buf?.width!! < width || buf?.height!! < height) {
-            buf = UIUtil.createImage(width, height, BufferedImage.TYPE_4BYTE_ABGR)
+            // TODO: Add handling for HiDPI scaling and switch back to UIUtil.createImage
+            buf = BufferedImage(width, height, BufferedImage.TYPE_4BYTE_ABGR)
         }
 
         val g = buf!!.createGraphics()

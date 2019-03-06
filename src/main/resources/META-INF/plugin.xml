@@ -150,7 +150,8 @@
 		</ul>
 	]]></change-notes>
 
-	<idea-version since-build="139" until-build="143.*"/>
+	<!--Earlier versions of 143 had broken kotlin modules...-->
+	<idea-version since-build="143.2287.1"/>
 
 	<depends>com.intellij.modules.platform</depends>
 

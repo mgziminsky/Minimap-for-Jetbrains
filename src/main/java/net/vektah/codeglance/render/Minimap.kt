@@ -28,7 +28,6 @@ package net.vektah.codeglance.render
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.progress.ProgressIndicator
-import com.intellij.util.ui.UIUtil
 import net.vektah.codeglance.config.Config
 import java.awt.AlphaComposite
 import java.awt.image.BufferedImage
@@ -44,7 +43,6 @@ class Minimap(private val config: Config) {
      * Internal worker function to update the minimap image
      *
      * @param editor        The editor being drawn
-     * @param hl            The syntax highlighter to use for the language this document is in.
      */
     fun update(editor: EditorEx, scrollstate: ScrollState, indicator: ProgressIndicator?) {
         logger.debug("Updating file image.")
@@ -53,7 +51,8 @@ class Minimap(private val config: Config) {
             if (img != null) img!!.flush()
             // Create an image that is a bit bigger then the one we need so we don't need to re-create it again soon.
             // Documents can get big, so rather then relative sizes lets just add a fixed amount on.
-            img = UIUtil.createImage(config.width, scrollstate.documentHeight + (100 * config.pixelsPerLine), BufferedImage.TYPE_4BYTE_ABGR)
+            // TODO: Add handling for HiDPI scaling and switch back to UIUtil.createImage
+            img = BufferedImage(config.width, scrollstate.documentHeight + (100 * config.pixelsPerLine), BufferedImage.TYPE_4BYTE_ABGR)
             logger.debug("Created new image")
         }
 

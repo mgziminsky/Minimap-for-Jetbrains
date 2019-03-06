@@ -4,7 +4,8 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.intellij.openapi.fileEditor.FileEditorManagerAdapter
+import com.intellij.openapi.fileEditor.FileEditorManagerEvent
+import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
@@ -19,7 +20,7 @@ import javax.swing.JPanel
 /**
  * Injects a panel into any newly created editors.
  */
-class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapter() {
+class EditorPanelInjector(private val project: Project) : FileEditorManagerListener {
     private val logger = Logger.getInstance(javaClass)
     private var config: Config = ServiceManager.getService(ConfigService::class.java).state!!
 
@@ -84,4 +85,10 @@ class EditorPanelInjector(private val project: Project) : FileEditorManagerAdapt
             Disposer.register(editor, Disposable { panel.remove(glancePanel) })
         }
     }
+
+
+    override fun selectionChanged(event: FileEditorManagerEvent) {}
+
+    override fun fileClosed(source: FileEditorManager, file: VirtualFile) {}
+
 }
