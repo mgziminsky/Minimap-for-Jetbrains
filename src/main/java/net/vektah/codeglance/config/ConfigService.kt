@@ -7,7 +7,7 @@ import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 @State(
-        name = "CodeGlance",
+        name = "MiniMap",
         storages = arrayOf(
             Storage(id = "other", file = StoragePathMacros.APP_CONFIG + "/CodeGlance.xml")
         )

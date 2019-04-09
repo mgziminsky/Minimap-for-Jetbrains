@@ -38,11 +38,11 @@ class ConfigEntry : Configurable {
     private val config = configService.state!!
 
     @Nls override fun getDisplayName(): String {
-        return "CodeGlance"
+        return "MiniMap"
     }
 
     override fun getHelpTopic(): String? {
-        return "Configuration for the CodeGlance minimap"
+        return "Configuration for the sidebar Minimap"
     }
 
     override fun createComponent(): JComponent? {

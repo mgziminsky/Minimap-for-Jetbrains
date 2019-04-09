@@ -11,7 +11,7 @@ class CodeGlancePlugin(private val project: Project) : ProjectComponent {
 
     override fun initComponent() {
         project.messageBus.connect().subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, injector)
-        logger.debug("CodeGlance2 initialized")
+        logger.debug("MiniMap initialized")
     }
 
     override fun disposeComponent() {

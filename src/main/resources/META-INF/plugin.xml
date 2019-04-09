@@ -1,20 +1,38 @@
-<idea-plugin url="https://github.com/mgziminsky/CodeGlance">
-	<id>net.vektah.codeglance</id>
-	<name>CodeGlance</name>
-	<vendor email="mgziminsky@users.noreply.github.com" url="https://github.com/mgziminsky/CodeGlance">mgziminsky</vendor>
+<idea-plugin url="https://github.com/mgziminsky/Minimap-for-Jetbrains">
+	<id>net.mgziminsky.minimap</id>
+	<name>MiniMap</name>
+	<vendor email="mgziminsky@users.noreply.github.com" url="https://github.com/mgziminsky/Minimap-for-Jetbrains">Z</vendor>
 
 	<description><![CDATA[
-		This is a fork of the CodeGlance plugin containing several bug fixes and improvements. Its goal is to have functionality
-		at least on-par with the built in minimaps of Sumblime 3 and VSCode.
-
+		<p>
+			This is an unofficial fork of the CodeGlance plugin containing several bug fixes and improvements. Its goal is to have functionality
+			at least on-par with the built in minimaps of Sumblime 3 and VSCode.
+		</p>
+		<p>
+			Main differences to CodeGlance:
+			<ul>
+				<li>Works correctly with virtual space enabled</li>
+				<li>Minimap can be used as a scrollbar</li>
+			</ul>
+		</p>
 		<hr/>
-
-		Original Description:
-		Embeds a code minimap similar to the one found in Sublime into the editor pane. Works with both light and dark
-		themes using your customized colors for syntax highlighting.
+		<p>
+			Original Description:
+			<p>
+				Embeds a code minimap similar to the one found in Sublime into the editor pane. Works with both light and dark
+				themes using your customized colors for syntax highlighting.
+			</p>
+		</p>
 	]]></description>
 
 	<change-notes><![CDATA[
+		<h3>2.0.0: Initial release of fork</h3>
+		<ul>
+			<li>Bugfix: Work correctly when virtual space is enabled</li>
+			<li>Bugfix: Fix some broken options and remove some others that were unused</li>
+			<li>Enhancement: Minimap can be used as a scrollbar</li>
+		</ul>
+		<hr/>
 		<h3>1.5.4</h3>
 		<ul>
 			<li>Bugfix: Viewport position now calculates correctly for large files -@ru5k</li>
@@ -123,7 +141,6 @@
 			<li>Fixed a bug with scrolling in large files and the reticule not matching the top correctly.</li>
 			<li>Made character weighting non random, removes the 'film grain' effect when rapidly updating a document.</li>
 		</ul>
-
 		<h3>1.0: Initial release of the plugin:</h3>
 		<ul>
 			<li>Worker thread for rendering</li>
@@ -135,14 +152,14 @@
 
 	<idea-version since-build="139" until-build="143.*"/>
 
-	<depends>com.intellij.modules.lang</depends>
+	<depends>com.intellij.modules.platform</depends>
 
 	<project-components>
 		<component><implementation-class>net.vektah.codeglance.CodeGlancePlugin</implementation-class><loadForDefaultProject/></component>
 	</project-components>
 
 	<actions>
-		<action id="CodeGlance.toggle" text="Toggle CodeGlance" class="net.vektah.codeglance.actions.ShowHideAction" description="Toggles CodeGlance on and off">
+		<action id="Minimap.toggle" text="Toggle Minimap" class="net.vektah.codeglance.actions.ShowHideAction" description="Toggles Minimap on and off">
 			<keyboard-shortcut first-keystroke="control shift G" keymap="$default" />
 		</action>
 	</actions>

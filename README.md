@@ -1,49 +1,47 @@
-CodeGlance [![CircleCI](https://circleci.com/gh/Vektah/CodeGlance/tree/master.svg?style=svg)](https://circleci.com/gh/Vektah/CodeGlance/tree/master)
+MiniMap (A CodeGlance Fork)
 ==========
 
-Plugin Repository: http://plugins.jetbrains.com/plugin/7275  
-Latest build: https://github.com/Vektah/CodeGlance/releases
+## This is an unofficial fork of the excellent CodeGlance plugin, which unfortunately no longer seems to be maintained.
 
-InteliJ plugin that displays a zoomed out overview or minimap similar to the one found in Sublime into the editor pane. The minimap allows for quick scrolling letting you jump straight to sections of code.
+#### Main differences compared to CodeGlance
+- Works correctly with virtual space enabled
+- Minimap can be used as a scrollbar
+
+-------------
+
+Latest build: https://github.com/mgziminsky/Minimap-for-Jetbrains/releases
+
+Jetbrains IDE plugin that displays a zoomed out overview, or minimap, similar to the one found in Sublime into the editor pane. The minimap allows for quick scrolling letting you jump straight to sections of code.
 
  - Works with both light and dark themes using your customized colors for syntax highlighting.
- - Worker thread for rendering
- - Color rendering using InteliJ's tokenizer
+ - Color rendering using IntelliJ's tokenizer
  - Scrollable!
  - Embedded into editor window
- - Complete replacement for Code Outline that supports new Intellij builds.
 
-![Dracula](https://raw.github.com/Vektah/CodeGlance/master/pub/example.png)
+![Dracula](https://raw.github.com/mgziminsky/Minimap-for-Jetbrains/master/pub/example.png)
 
 
 Building using Gradle
 ====================
 ```
-git clone https://github.com/Vektah/CodeGlance
-cd CodeGlance
+git clone https://github.com/mgziminsky/Minimap-for-Jetbrains.git Minimap
+cd MiniMap
 # run the tests
 ./gradlew test
 
 # build the plugin and install it in the sandbox then start idea
-./gradlew runIdea
+./gradlew runIde
 
 # build a release
 ./gradlew buildPlugin
 
 ```
-The result will be saved as build/distributions/CodeGlance-{version}.zip
+The result will be saved as build/distributions/MiniMap-{version}.zip
 
 
-Running from source in IntellJ
+Running from source in IntelliJ
 ===================
-1. Make sure you have the Plugin DevKit installed.
-2. Checkout sources from github
-3. Create a new Intellij Platform plugin project
-4. Select source directory, chose a plugin sdk (create one that points to your intellij install).
-5. Mark src/main/java as source root, and src/test/java as test root.
-6. In order to run tests you will need to find mockito and testing jars. I usually do this with Gradle.
-7. In module settings set the path to META-INF to src/main/resources
-8. Hit Run.
+Import the gradle project and run the `runIde` task.
 
 
 Show/Hide or Enable/Disable Minimap
