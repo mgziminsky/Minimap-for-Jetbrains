@@ -11,7 +11,7 @@ targetCompatibility = "1.8"
 tasks.withType(JavaCompile) { options.encoding = 'UTF-8' }
 
 intellij {
-    version "15.0.4"
+    version "2019.1"
     pluginName 'MiniMap'
     updateSinceUntilBuild = false
 }

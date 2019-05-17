@@ -3,14 +3,11 @@ package net.vektah.codeglance.config
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
-import com.intellij.openapi.components.StoragePathMacros
 import com.intellij.util.xmlb.XmlSerializerUtil
 
 @State(
-        name = "MiniMap",
-        storages = arrayOf(
-            Storage(id = "other", file = StoragePathMacros.APP_CONFIG + "/CodeGlance.xml")
-        )
+    name = "MiniMap",
+    storages = [Storage("CodeGlance.xml")]
 )
 class ConfigService : PersistentStateComponent<Config> {
     private val observers : MutableSet<() -> Unit> = hashSetOf()
