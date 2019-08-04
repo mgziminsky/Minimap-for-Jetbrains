@@ -26,6 +26,11 @@
 	]]></description>
 
 	<change-notes><![CDATA[
+		<h3>2.0.1</h3>
+		<ul>
+			<li>Bugfix: Fix minimap image sometimes stops updating</li>
+		</ul>
+		<hr/>
 		<h3>2.0.0: Initial release of fork</h3>
 		<ul>
 			<li>Bugfix: Work correctly when virtual space is enabled</li>

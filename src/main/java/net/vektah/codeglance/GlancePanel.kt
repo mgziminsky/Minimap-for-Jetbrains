@@ -130,7 +130,11 @@ class GlancePanel(private val project: Project, textEditor: TextEditor) : JPanel
         editor.selectionModel.addSelectionListener(selectionListener)
 
         updateTask = object : ReadTask() {
-            override fun onCanceled(indicator: ProgressIndicator) = updateImage()
+            override fun onCanceled(indicator: ProgressIndicator) {
+                renderLock.release()
+                renderLock.clean()
+                updateImageSoon()
+            }
 
             override fun computeInReadAction(indicator: ProgressIndicator) {
                 val map = getOrCreateMap() ?: return
